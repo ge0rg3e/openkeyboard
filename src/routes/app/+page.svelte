@@ -7,6 +7,9 @@
     deviceInfo,
     error,
     brightness as deviceBrightness,
+    gameMode,
+    macroLed,
+    battery,
   } from "$lib/store";
   import type { EffectKind } from "$lib/index";
   import KeyboardVisual from "$lib/components/KeyboardVisual.svelte";
@@ -22,8 +25,11 @@
   import { Slider } from "$lib/components/ui/slider";
   import { Input } from "$lib/components/ui/input";
   import { Separator } from "$lib/components/ui/separator";
+  import { Switch } from "$lib/components/ui/switch";
   import type { EffectParams } from "$lib/controller";
   import { toast } from "svelte-sonner";
+  import { customSupported, ELITE_CELLS } from "$lib/keyboard/matrix";
+  import { keyboardMatrixKeys } from "$lib/keyboard/layout";
 
   let kind = $state<EffectKind>("static");
   let color1 = $state("#00ff88");
@@ -33,6 +39,8 @@
   let starlightMode = $state<"single" | "dual" | "random">("single");
   let direction = $state<"left" | "right">("right");
   let brightness = $state(127);
+  let paintColor = $state("#ffffff");
+  let customColors = $state<Record<string, string>>({});
 
   // keep the slider in sync with the on-device brightness loaded on connect
   $effect(() => {
@@ -66,6 +74,8 @@
         starlightMode = s.starlightMode;
       if (s.direction === "left" || s.direction === "right")
         direction = s.direction;
+      if (typeof s.custom === "object" && s.custom !== null)
+        customColors = s.custom;
     } catch {
       /* ignore corrupt storage */
     }
@@ -83,11 +93,27 @@
           breathingMode,
           starlightMode,
           direction,
+          custom: customColors,
         }),
       );
     } catch {
       /* storage unavailable */
     }
+  }
+
+  function paintKey(code: string) {
+    customColors = { ...customColors, [code]: paintColor };
+  }
+
+  function clearCustom() {
+    customColors = {};
+  }
+
+  function fillCustom() {
+    const next: Record<string, string> = {};
+    for (const k of keyboardMatrixKeys()) next[k.code] = paintColor;
+    if (isElite) for (const c of ELITE_CELLS) next[c.code] = paintColor;
+    customColors = next;
   }
 
   if (typeof window !== "undefined") {
@@ -110,7 +136,8 @@
       p.speed = speed;
     }
     if (kind === "reactive") p.speed = speed;
-    if (kind === "wave") p.direction = direction;
+    if (kind === "wave" || kind === "wheel") p.direction = direction;
+    if (kind === "custom") p.custom = customColors;
     return p;
   });
 
@@ -135,20 +162,62 @@
   );
   const showMode = $derived(kind === "breathing" || kind === "starlight");
   const showSpeed = $derived(kind === "reactive" || kind === "starlight");
-  const showDirection = $derived(kind === "wave");
+  const showDirection = $derived(kind === "wave" || kind === "wheel");
   const hasOptions = $derived(
     showMode || showColor1 || showSpeed || showDirection,
   );
 
-  const effectList: Array<[EffectKind, string]> = [
+  // Per-key "custom" lighting needs a standard 6-row matrix + a driver that
+  // exposes matrix_custom_frame (every Chroma keyboard except the keypads).
+  const canCustom = $derived(
+    $connected
+      ? !!$deviceInfo?.kbd &&
+          $deviceInfo.kbd.custom &&
+          customSupported(
+            $deviceInfo.kbd.matrixRows,
+            $deviceInfo.kbd.matrixCols,
+          )
+      : true,
+  );
+  // The Huntsman Elite (9-row matrix) exposes media keys + a wrist-rest lightbar.
+  const isElite = $derived(
+    !!$deviceInfo?.kbd &&
+      $deviceInfo.kbd.matrixRows === 9 &&
+      $deviceInfo.kbd.matrixCols === 22,
+  );
+  // The "Wheel" hardware effect only exists on the BlackWidow V4 family;
+  // other boards fall back to spectrum, so the tile is only offered when the
+  // connected device supports it (or in demo mode where the preview animates).
+  const canWheel = $derived(!$connected || !!$deviceInfo?.kbd?.wheel);
+  const effectList = $derived<Array<[EffectKind, string]>>([
     ["off", "Off"],
     ["static", "Static"],
     ["wave", "Wave"],
+    ...(canWheel ? ([["wheel", "Wheel"]] as Array<[EffectKind, string]>) : []),
     ["spectrum", "Spectrum"],
     ["reactive", "Reactive"],
     ["breathing", "Breath"],
     ["starlight", "Star"],
-  ];
+    ...(canCustom ? ([["custom", "Custom"]] as Array<[EffectKind, string]>) : []),
+  ]);
+
+  // Fall back to a hardware effect if the connected board can't do the
+  // selected effect (custom needs a custom-frame matrix, wheel needs the
+  // BlackWidow V4 family's hardware effect).
+  $effect(() => {
+    if (!$connected) return;
+    if (kind === "custom" && !canCustom) kind = "static";
+    else if (kind === "wheel" && !canWheel) kind = "spectrum";
+  });
+
+  let gm = $state<boolean>(false);
+  let ml = $state<boolean>(false);
+  $effect(() => {
+    if ($gameMode != null) gm = $gameMode;
+  });
+  $effect(() => {
+    if ($macroLed != null) ml = $macroLed;
+  });
 
   $effect(() => {
     if ($error && !$error.includes("user gesture")) toast.error($error);
@@ -190,12 +259,33 @@
     {#if $connected}
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
+          {#if $deviceInfo?.kbd}
+            <img
+              src="/razer.png"
+              alt="Razer"
+              class="h-5 w-auto shrink-0 object-contain"
+            />
+          {/if}
           {$deviceInfo?.name ?? "Keyboard"}
 
           {#if $deviceInfo?.serial}
             <span class="hidden text-xs text-muted-foreground sm:inline"
               >Serial {`${$deviceInfo.serial}`}</span
             >
+          {/if}
+
+          {#if $battery}
+            <Badge variant="outline" class="gap-1.5 rounded-full text-[11px]">
+              <span
+                class={`h-1.5 w-1.5 rounded-full ${
+                  $battery.charging ? "bg-emerald-500" : "bg-current"
+                }`}
+              ></span>
+              {`${$battery.level}%`}
+              {#if $battery.charging}
+                <span class="text-muted-foreground">charging</span>
+              {/if}
+            </Badge>
           {/if}
         </div>
         {#if $deviceInfo?.firmware}
@@ -223,6 +313,8 @@
             layout={$deviceInfo?.kbd?.layout ?? "full"}
             {effectParams}
             {brightness}
+            custom={customColors}
+            onKeyClick={kind === "custom" && canCustom ? paintKey : null}
           />
         </div>
 
@@ -334,6 +426,63 @@
               </div>
             {/if}
 
+            {#if kind === "custom" && canCustom}
+              <Separator />
+              <div class="flex flex-col gap-2.5">
+                <div class="flex flex-col gap-1.5">
+                  <Label class="text-xs">Paint colour</Label>
+                  <Input
+                    type="color"
+                    bind:value={paintColor}
+                    class="h-9 w-full p-1"
+                  />
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  {#each [
+                    "#ffffff",
+                    "#ff0000",
+                    "#ff8800",
+                    "#ffff00",
+                    "#00ff88",
+                    "#00ccff",
+                    "#8888ff",
+                    "#ff00ff",
+                  ] as sw}
+                    <button
+                      type="button"
+                      aria-label={sw}
+                      class="h-5 w-5 rounded-full border border-white/20 transition-transform hover:scale-110"
+                      class:swatch-selected={paintColor === sw}
+                      style="background:{sw}"
+                      onclick={() => (paintColor = sw)}
+                    ></button>
+                  {/each}
+                </div>
+                <div class="flex gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="flex-1 text-xs"
+                    onclick={clearCustom}
+                    >Clear</Button
+                  >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="flex-1 text-xs"
+                    onclick={fillCustom}
+                    >Fill all</Button
+                  >
+                </div>
+                <span
+                  class="text-[10px] leading-relaxed text-muted-foreground"
+                >
+                  Click keys on the keyboard to paint them. Per-key lighting is
+                  host-rendered and resets when the keyboard powers off.
+                </span>
+              </div>
+            {/if}
+
             <Separator />
 
             <div class="flex flex-col gap-2">
@@ -356,6 +505,51 @@
                 step={1}
               />
             </div>
+
+            <Separator />
+
+            <div class="flex flex-col gap-3">
+              <span
+                class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                >Device</span
+              >
+
+              {#if $connected}
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex flex-col">
+                    <Label class="text-xs">Game mode</Label>
+                    <span class="text-[10px] text-muted-foreground"
+                      >Disables the Windows key</span
+                    >
+                  </div>
+                  <Switch
+                    checked={gm}
+                    onCheckedChange={(c) => {
+                      gm = c;
+                      $gameMode = c;
+                      controller.setGameMode(c).catch(() => {});
+                    }}
+                  />
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex flex-col">
+                    <Label class="text-xs">Macro key lights</Label>
+                    <span class="text-[10px] text-muted-foreground"
+                      >M1-M5 backlight</span
+                    >
+                  </div>
+                  <Switch
+                    checked={ml}
+                    onCheckedChange={(c) => {
+                      ml = c;
+                      $macroLed = c;
+                      controller.setMacroLeds(c).catch(() => {});
+                    }}
+                  />
+                </div>
+              {/if}
+            </div>
           </CardContent>
         </Card>
       </aside>
@@ -366,5 +560,10 @@
 <style>
   :global(:root) {
     color-scheme: dark;
+  }
+
+  .swatch-selected {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
   }
 </style>

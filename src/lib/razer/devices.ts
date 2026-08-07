@@ -17,7 +17,20 @@ export interface KeyboardDevice {
 	waveLeft?: number;
 	/** URL (from /static) of a product photo shown on the landing page. */
 	image?: string;
+	/** true when the board exposes a battery (wireless models + wired HyperSpeed dongles). */
+	battery?: boolean;
+	/** transaction id used for battery queries (differs from the lighting tid on some boards). */
+	batteryTid?: number;
 	layout: LayoutKind;
+	/** LED matrix rows (canonical Chroma grid is 6×22). */
+	matrixRows: number;
+	/** LED matrix columns (canonical Chroma grid is 6×22). */
+	matrixCols: number;
+	/** false for boards whose driver has no custom-frame device file. */
+	custom: boolean;
+	/** true when the firmware exposes the hardware colour-wheel effect
+	 *  (extended matrix effect 0x0a — only the BlackWidow V4 family). */
+	wheel?: boolean;
 }
 
 interface RawSpec {
@@ -29,6 +42,85 @@ interface RawSpec {
 	layout?: LayoutKind;
 	waveLeft?: number;
 	image?: string;
+	battery?: boolean;
+	batteryTid?: number;
+	/** false for boards whose kernel driver exposes no matrix_custom_frame. */
+	custom?: boolean;
+	/** true when the board supports the hardware colour-wheel effect
+	 *  (matrix_effect_wheel device file: BlackWidow V4 family). */
+	wheel?: boolean;
+}
+
+/** LED matrix geometry (rows, cols). Boilerplate from the OpenRazer daemon
+ *  (MATRIX_DIMS); only entries that differ from the layout-based default are
+ *  listed here. */
+const MATRIX_OVERRIDES: Record<number, [number, number]> = {
+	// classic 6×16 laptop matrix (Blade family)
+	0x020f: [6, 16],
+	0x0220: [6, 16],
+	0x0224: [6, 16],
+	0x022d: [6, 16],
+	0x0232: [6, 16],
+	0x0233: [6, 16],
+	0x0234: [6, 16],
+	0x0239: [6, 16],
+	0x023a: [6, 16],
+	0x023b: [6, 16],
+	0x0240: [6, 16],
+	0x0245: [6, 16],
+	0x0246: [6, 16],
+	0x024a: [6, 16],
+	0x024b: [6, 16],
+	0x024c: [6, 16],
+	0x024d: [6, 16],
+	0x0252: [6, 16],
+	0x0253: [6, 16],
+	0x0255: [6, 16],
+	0x0256: [6, 16],
+	0x0259: [6, 16],
+	0x0268: [6, 16],
+	0x026a: [6, 16],
+	0x026d: [6, 16],
+	0x026e: [6, 16],
+	0x026f: [6, 16],
+	0x0270: [6, 16],
+	0x0276: [6, 16],
+	0x0279: [6, 16],
+	0x027a: [6, 16],
+	0x028a: [6, 16],
+	0x028b: [6, 16],
+	0x028c: [6, 16],
+	0x029d: [6, 16],
+	0x029e: [6, 16],
+	0x029f: [6, 16],
+	0x02a0: [6, 16],
+	0x02b6: [6, 16],
+	0x02b8: [6, 16],
+	0x02c5: [6, 16],
+	// classic 6×25 (Blade Pro 2017)
+	0x0225: [6, 25],
+	0x022f: [6, 25],
+	// classic 6×17 / 6×19 (recent Blade generations)
+	0x02c6: [6, 17],
+	0x02c7: [6, 19],
+	// extended TKL — DeathStalker V2 Pro TKL drops the cluster, not just the numpad
+	0x0296: [6, 17],
+	0x0298: [6, 17],
+	// extended 75% — no nav cluster
+	0x02a5: [6, 16],
+	// extended full-size with extra rows (wrist-rest lightbar / macro row)
+	0x0226: [9, 22],
+	0x028d: [8, 23]
+};
+
+function defaultMatrix(style: MatrixStyle, layout: LayoutKind): [number, number] {
+	if (style === 'extended') {
+		if (layout === 'mini') return [5, 15];
+		if (layout === 'tkl') return [6, 18];
+		return [6, 22];
+	}
+	// classic: desktop Chroma family is 6×22, compact boards are one-row.
+	return layout === 'mini' ? [1, 12] : [6, 22];
 }
 
 const RAW: RawSpec[] = [
@@ -316,8 +408,17 @@ const RAW: RawSpec[] = [
 	{ pid: 0x02c7, name: 'Blade 18 (2025)', report: 1, tid: 0xff, style: 'classic', layout: 'full', image: 'https://dl.razerzone.com/src2/14968/14968-1-en-v1.png' },
 
 	// extended, report 2
-	{ pid: 0x010f, name: 'Anansi', report: 2, tid: 0x1f, style: 'extended', layout: 'full', image: 'https://assets.razerzone.com/eeimages/support/products/54/54_anansi.png' },
-	{ pid: 0x0208, name: 'Tartarus Chroma', report: 2, tid: 0x1f, style: 'classic', layout: 'mini', image: 'https://assets.razerzone.com/eeimages/support/products/598/598_tartarus_chroma.png' },
+	{ pid: 0x010f, name: 'Anansi', report: 2, tid: 0x1f, style: 'extended', layout: 'full', custom: false, image: 'https://assets.razerzone.com/eeimages/support/products/54/54_anansi.png' },
+	{
+		pid: 0x0208,
+		name: 'Tartarus Chroma',
+		report: 2,
+		tid: 0x1f,
+		style: 'classic',
+		layout: 'mini',
+		custom: false,
+		image: 'https://assets.razerzone.com/eeimages/support/products/598/598_tartarus_chroma.png'
+	},
 	{ pid: 0x0226, name: 'Huntsman Elite', report: 2, tid: 0x3f, style: 'extended', layout: 'full', image: 'https://assets.razerzone.com/eeimages/support/products/1361/1361_huntsman_elite.png' },
 	{
 		pid: 0x0243,
@@ -330,7 +431,7 @@ const RAW: RawSpec[] = [
 	},
 	{ pid: 0x0257, name: 'Huntsman Mini', report: 2, tid: 0x1f, style: 'extended', layout: 'mini', image: 'https://assets.razerzone.com/eeimages/support/products/1689/1689-huntsmanmini.png' },
 	{ pid: 0x025d, name: 'Ornata V2', report: 2, tid: 0x1f, style: 'extended', layout: 'full', image: 'https://assets.razerzone.com/eeimages/support/products/1672/ornata-v2.png' },
-	{ pid: 0x0293, name: 'BlackWidow V4 X', report: 2, tid: 0x1f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src2/13223/13223-1-en-v1.png' },
+	{ pid: 0x0293, name: 'BlackWidow V4 X', report: 2, tid: 0x1f, style: 'extended', layout: 'full', wheel: true, image: 'https://dl.razerzone.com/src2/13223/13223-1-en-v1.png' },
 	{ pid: 0x0228, name: 'BlackWidow Elite', report: 2, tid: 0x1f, style: 'extended', layout: 'full', image: 'https://assets.razerzone.com/eeimages/support/products/1398/1398_blackwidowelite.png' },
 
 	// extended, report 3
@@ -346,13 +447,73 @@ const RAW: RawSpec[] = [
 		layout: 'tkl',
 		image: 'https://assets.razerzone.com/eeimages/support/products/1709/1709-blackwidow-v3-tkl.png'
 	},
-	{ pid: 0x025a, name: 'BlackWidow V3 Pro (Wired)', report: 3, tid: 0x3f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src/3809-1-EN-v1.png' },
-	{ pid: 0x025c, name: 'BlackWidow V3 Pro (Wireless)', report: 3, tid: 0x9f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src/3809-1-EN-v1.png' },
+	{
+		pid: 0x025a,
+		name: 'BlackWidow V3 Pro (Wired)',
+		report: 3,
+		tid: 0x3f,
+		style: 'extended',
+		layout: 'full',
+		battery: true,
+		batteryTid: 0x3f,
+		image: 'https://dl.razerzone.com/src/3809-1-EN-v1.png'
+	},
+	{
+		pid: 0x025c,
+		name: 'BlackWidow V3 Pro (Wireless)',
+		report: 3,
+		tid: 0x9f,
+		style: 'extended',
+		layout: 'full',
+		battery: true,
+		batteryTid: 0x9f,
+		image: 'https://dl.razerzone.com/src/3809-1-EN-v1.png'
+	},
 	{ pid: 0x0295, name: 'DeathStalker V2', report: 3, tid: 0x3f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src/6118/6118-1-en-v1.png' },
-	{ pid: 0x0292, name: 'DeathStalker V2 Pro (Wired)', report: 3, tid: 0x3f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src/6118/6118-1-en-v1.png' },
-	{ pid: 0x0290, name: 'DeathStalker V2 Pro (Wireless)', report: 3, tid: 0x9f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src/6118/6118-1-en-v1.png' },
-	{ pid: 0x0298, name: 'DeathStalker V2 Pro TKL (Wired)', report: 3, tid: 0x3f, style: 'extended', layout: 'tkl', image: 'https://dl.razerzone.com/src/6117/6117-1-en-v1.png' },
-	{ pid: 0x0296, name: 'DeathStalker V2 Pro TKL (Wireless)', report: 3, tid: 0x9f, style: 'extended', layout: 'tkl', image: 'https://dl.razerzone.com/src/6117/6117-1-en-v1.png' },
+	{
+		pid: 0x0292,
+		name: 'DeathStalker V2 Pro (Wired)',
+		report: 3,
+		tid: 0x3f,
+		style: 'extended',
+		layout: 'full',
+		battery: true,
+		batteryTid: 0x1f,
+		image: 'https://dl.razerzone.com/src/6118/6118-1-en-v1.png'
+	},
+	{
+		pid: 0x0290,
+		name: 'DeathStalker V2 Pro (Wireless)',
+		report: 3,
+		tid: 0x9f,
+		style: 'extended',
+		layout: 'full',
+		battery: true,
+		batteryTid: 0x9f,
+		image: 'https://dl.razerzone.com/src/6118/6118-1-en-v1.png'
+	},
+	{
+		pid: 0x0298,
+		name: 'DeathStalker V2 Pro TKL (Wired)',
+		report: 3,
+		tid: 0x3f,
+		style: 'extended',
+		layout: 'tkl',
+		battery: true,
+		batteryTid: 0x1f,
+		image: 'https://dl.razerzone.com/src/6117/6117-1-en-v1.png'
+	},
+	{
+		pid: 0x0296,
+		name: 'DeathStalker V2 Pro TKL (Wireless)',
+		report: 3,
+		tid: 0x9f,
+		style: 'extended',
+		layout: 'tkl',
+		battery: true,
+		batteryTid: 0x9f,
+		image: 'https://dl.razerzone.com/src/6117/6117-1-en-v1.png'
+	},
 	{ pid: 0x02a6, name: 'Huntsman V3 Pro', report: 3, tid: 0x3f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src2/13671/13671-1-en-v2.png' },
 	{
 		pid: 0x02a7,
@@ -372,23 +533,32 @@ const RAW: RawSpec[] = [
 		layout: 'mini',
 		image: 'https://medias-p1.phoenix.razer.com/sys-master-phoenix-images-container/h8d/h31/9662065901598/230921-huntsman-v3-pro-mini-black-1500x1000-5.jpg'
 	},
-	{ pid: 0x028d, name: 'BlackWidow V4 Pro', report: 3, tid: 0x1f, style: 'extended', layout: 'full', image: 'https://dl.razerzone.com/src2/9703/9703-1-en-v1.png' },
-	{ pid: 0x02a5, name: 'BlackWidow V4 75%', report: 3, tid: 0x1f, style: 'extended', layout: 'tkl', image: 'https://dl.razerzone.com/src2/13256/13256-1-en-v2.png' }
+	{ pid: 0x028d, name: 'BlackWidow V4 Pro', report: 3, tid: 0x1f, style: 'extended', layout: 'full', wheel: true, image: 'https://dl.razerzone.com/src2/9703/9703-1-en-v1.png' },
+	{ pid: 0x02a5, name: 'BlackWidow V4 75%', report: 3, tid: 0x1f, style: 'extended', layout: 'tkl', wheel: true, image: 'https://dl.razerzone.com/src2/13256/13256-1-en-v2.png' }
 ];
 
 const byPid = new Map<number, RawSpec>();
 for (const spec of RAW) byPid.set(spec.pid, spec);
 
-export const KEYBOARD_DEVICES: KeyboardDevice[] = [...byPid.values()].map((s) => ({
-	pid: s.pid,
-	name: s.name,
-	reportIndex: s.report,
-	transactionId: s.tid,
-	style: s.style,
-	layout: s.layout ?? 'full',
-	waveLeft: s.waveLeft,
-	image: s.image ?? `/keyboards/0x${s.pid.toString(16).padStart(4, '0')}.png`
-}));
+export const KEYBOARD_DEVICES: KeyboardDevice[] = [...byPid.values()].map((s) => {
+	const [matrixRows, matrixCols] = MATRIX_OVERRIDES[s.pid] ?? defaultMatrix(s.style, s.layout ?? 'full');
+	return {
+		pid: s.pid,
+		name: s.name,
+		reportIndex: s.report,
+		transactionId: s.tid,
+		style: s.style,
+		layout: s.layout ?? 'full',
+		waveLeft: s.waveLeft,
+		battery: s.battery,
+		batteryTid: s.batteryTid,
+		image: s.image ?? `/keyboards/0x${s.pid.toString(16).padStart(4, '0')}.png`,
+		matrixRows,
+		matrixCols,
+		custom: s.custom ?? true,
+		wheel: s.wheel
+	};
+});
 
 export function getKeyboard(pid: number): KeyboardDevice | undefined {
 	return KEYBOARD_DEVICES.find((d) => d.pid === pid);

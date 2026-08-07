@@ -23,10 +23,19 @@ export async function connect(): Promise<void> {
 		const info = await controller.connect();
 		deviceInfo.set(info);
 		connected.set(controller.connected);
-		// auto-load the only on-device profile value the HID interface exposes:
-		// the current backlight brightness (effects are write-only on Razer).
+		// auto-load the on-device state the HID interface exposes: backlight
+		// brightness, game-mode and macro-LED flags. Effects are write-only on
+		// Razer so the current effect itself can't be read back.
 		const b = await controller.getBrightness().catch(() => null);
 		if (b != null) brightness.set(b);
+		const gm = await controller.getGameMode().catch(() => null);
+		if (gm != null) gameMode.set(gm);
+		const ml = await controller.getMacroLeds().catch(() => null);
+		if (ml != null) macroLed.set(ml);
+		if (info.kbd?.battery) {
+			const b = await controller.getBattery().catch(() => null);
+			if (b) battery.set(b);
+		}
 	} catch (err) {
 		error.set(err instanceof Error ? err.message : String(err));
 		connected.set(false);
@@ -34,6 +43,9 @@ export async function connect(): Promise<void> {
 }
 
 export const brightness = writable<number | null>(null);
+export const gameMode = writable<boolean | null>(null);
+export const macroLed = writable<boolean | null>(null);
+export const battery = writable<{ level: number; charging: boolean } | null>(null);
 
 export async function disconnect(): Promise<void> {
 	await controller.disconnect();

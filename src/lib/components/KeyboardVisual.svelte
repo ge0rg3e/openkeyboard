@@ -9,12 +9,16 @@
 		preview = null as EffectKind | null,
 		layout = 'full' as LayoutKind,
 		effectParams = {} as EffectParams,
-		brightness = 255 as number
+		brightness = 255 as number,
+		custom = {} as Record<string, string>,
+		onKeyClick = null as ((code: string) => void) | null
 	}: {
 		preview?: EffectKind | null;
 		layout?: LayoutKind;
 		effectParams?: EffectParams;
 		brightness?: number;
+		custom?: Record<string, string>;
+		onKeyClick?: ((code: string) => void) | null;
 	} = $props();
 
 	// Which extra blocks this model exposes. 'full' has a function row + numpad,
@@ -143,6 +147,9 @@
 	}
 	function color(code: string): string {
 		if (!code) return '#10141a';
+		if (preview === 'custom') {
+			return dim(custom?.[code] ?? '#0a0a0c');
+		}
 		const k = keyByCode.get(code);
 		if (k && preview) return dim(effectColorOf(preview, effectParams, clock, k, pressed));
 		return dim('rgba(255,255,255,0.22)');
@@ -287,9 +294,14 @@
 			{#if showFnRow && FN_ROW.length}
 				<div class="row fnrow">
 					{#each FN_ROW as k}
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<div
-							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''}"
+							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
 							style="{glow(k.code ?? '')}"
+							role={k.code && onKeyClick ? 'button' : undefined}
+							tabindex={k.code && onKeyClick ? 0 : undefined}
+							onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
+							onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
 						>
 							<span class="key-label">{k.label}</span>
 						</div>
@@ -299,9 +311,14 @@
 			{#each ROWS as row}
 				<div class="row">
 					{#each row as k}
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<div
-							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''}"
+							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
 							style="{glow(k.code ?? '')}"
+							role={k.code && onKeyClick ? 'button' : undefined}
+							tabindex={k.code && onKeyClick ? 0 : undefined}
+							onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
+							onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
 						>
 							<span class="key-label">{k.label}</span>
 						</div>
@@ -314,9 +331,14 @@
 				{#each NUMPAD as npRow}
 					<div class="row">
 						{#each npRow as k}
+							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 							<div
-								class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''}"
+								class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
 								style="{glow(k.code ?? '')}"
+								role={k.code && onKeyClick ? 'button' : undefined}
+								tabindex={k.code && onKeyClick ? 0 : undefined}
+								onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
+								onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
 							>
 								<span class="key-label">{k.label}</span>
 							</div>
@@ -430,6 +452,20 @@
 			transform: translateY(0.5cqi);
 			filter: brightness(1.5) saturate(1.3);
 			z-index: 0;
+		}
+
+		.key.paintable {
+			cursor: pointer;
+		}
+		.key.paintable:hover {
+			box-shadow:
+				inset 0 0 0 0.1cqi rgba(255, 255, 255, 0.35),
+				inset 0 -0.1cqi 0 var(--box-shadow-inner),
+				inset 0.1cqi 0 0 rgba(0, 0, 0, 0.75),
+				inset -0.1cqi 0 0 rgba(0, 0, 0, 0.75),
+				inset 0 0.1cqi 0 var(--box-shadow-inner),
+				inset 0 -0.5cqi 0.25cqi 0.85cqi var(--box-shadow-inner),
+				0 0 1.25cqi var(--box-shadow);
 		}
 
 		.key-label {

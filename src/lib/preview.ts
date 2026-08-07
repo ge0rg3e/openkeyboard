@@ -93,6 +93,14 @@ export function effectColorOf(kind: EffectKind, p: EffectParams, st: PreviewStat
 			return hex(hsv2rgb(hue, 1, 1));
 		}
 
+		case 'wheel': {
+			// "Wheel" spins the full colour wheel across the board — visually a
+			// hue that sweeps along the keys, like wave but built from HSV.
+			const dir = p.direction === 'left' ? -1 : 1;
+			const pos = (((rel - (t / 2.6) * dir) % 1) + 1) % 1;
+			return hex(hsv2rgb(pos, 1, 1));
+		}
+
 		case 'reactive': {
 			const base: RGB3 = [26, 30, 34];
 			const last = press?.[key.code] ?? 0;

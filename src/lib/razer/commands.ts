@@ -77,6 +77,16 @@ export function getLedBrightness(vst: number, ledId: number): CommandReport {
 	return r;
 }
 
+/* Battery (class 0x07, wireless-capable boards). Level is args[1], 0-255. */
+export function getBatteryLevel(): CommandReport {
+	return newReport(0x07, 0x80, 0x02);
+}
+
+/* Charging status is args[1]: 0 = not charging, 1 = charging. */
+export function getChargingStatus(): CommandReport {
+	return newReport(0x07, 0x84, 0x02);
+}
+
 function classicMatrixBase(argSize: number, effectId: number): CommandReport {
 	const r = newReport(0x03, 0x0a, argSize);
 	r.args[0] = effectId;
@@ -180,7 +190,9 @@ export function classicEffectStarlightRandom(speed: number): CommandReport {
 }
 
 export function classicMatrixSetCustomFrame(row: number, startCol: number, stopCol: number, rgbBytes: number[]): CommandReport {
-	const r = newReport(0x03, 0x0b, 0x47);
+	// 0x46 data size = 4 header args + 66 RGB bytes (22 columns) — matches the
+	// kernel driver's razer_chroma_standard_matrix_set_custom_frame packet.
+	const r = newReport(0x03, 0x0b, 0x46);
 	r.args[0] = 0xff; // frame id
 	r.args[1] = row;
 	r.args[2] = startCol;
