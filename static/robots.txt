@@ -1,3 +1,8 @@
 # allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+
+# the interactive app is client-only and marked noindex
+Disallow: /app
+
+Sitemap: https://openkeyboard.vercel.app/sitemap.xml

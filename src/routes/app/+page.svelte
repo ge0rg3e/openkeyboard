@@ -240,7 +240,13 @@
 </script>
 
 <svelte:head>
-  <title>OpenKeyboard</title>
+  <title>App — OpenKeyboard</title>
+  <meta
+    name="description"
+    content="Control your Razer Chroma or Logitech G-series keyboard from the browser with OpenKeyboard. Apply effects, set brightness, and manage per-key lighting over WebHID."
+  />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0a0c0e" />
 </svelte:head>
 
 <div class="min-h-screen w-full py-6 px-2 sm:px-3 lg:px-4">
