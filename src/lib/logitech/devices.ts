@@ -33,7 +33,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: true,
 		effects: ['off', 'static', 'spectrum', 'wave', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/non-braid/g213-finch/g213-gallery-1-nb.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G512,
@@ -45,7 +46,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/non-braid/flying-v-mx-g512/g513-backlit-mechanical-gaming-keyboard.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G512_RGB,
@@ -57,7 +59,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/non-braid/flying-v-mx-g512/g513-backlit-mechanical-gaming-keyboard.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G610_1,
@@ -69,7 +72,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://computerarenakh.com/image/cache/catalog/SEA%20DARA/111.NEW%202021/ASDFASDFA-468x278.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G610_2,
@@ -81,7 +85,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://computerarenakh.com/image/cache/catalog/SEA%20DARA/111.NEW%202021/ASDFASDFA-468x278.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G810_1,
@@ -93,7 +98,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/products/gaming/keyboards/g810-orion-spectrum-rgb-gaming-keyboard/920-007757/g810-orion-spectrum-rgb-mechanical-keyboard13.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G810_2,
@@ -105,7 +111,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/products/gaming/keyboards/g810-orion-spectrum-rgb-gaming-keyboard/920-007757/g810-orion-spectrum-rgb-mechanical-keyboard13.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G910_ORION_SPARK,
@@ -117,7 +124,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyXhoto288bBxOLX1YLqUxgizZ9ABS8AgF6wEMfhf3jg&s=10'
 	},
 	{
 		pid: LOGITECH_PIDS.G910,
@@ -129,7 +137,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://m.media-amazon.com/images/I/81FXE5u1xNL._AC_UF894,1000_QL80_.jpg'
 	},
 	{
 		pid: LOGITECH_PIDS.G_PRO,
@@ -141,7 +150,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.relaxedtech.com/reviews/logitech/g-pro-mechanical-gaming-keyboard/logitech-g-pro-keyboard-front.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G813,
@@ -153,7 +163,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: `https://resource.logitechg.com/w_544,h_466,ar_7:6,c_pad,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/g815/g815-gallery-3.png`
 	},
 	{
 		pid: LOGITECH_PIDS.G815,
@@ -165,7 +176,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: false,
 		effects: ['off', 'static', 'spectrum', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/non-braid/g815-harpy-corded/ch-g815-wired-gallery-topdown-nb.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G915,
@@ -177,7 +189,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: true,
 		effects: ['off', 'static', 'spectrum', 'wave', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 22
+		matrixCols: 22,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/products/g915/g915-gallery-2.png'
 	},
 	{
 		pid: LOGITECH_PIDS.G915_TKL,
@@ -189,7 +202,8 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		wave: true,
 		effects: ['off', 'static', 'spectrum', 'wave', 'breathing'],
 		matrixRows: 6,
-		matrixCols: 17
+		matrixCols: 17,
+		image: 'https://www.logitechg.com/content/dam/gaming/en/products/g915-tkl/g915-tkl-gallery/deu-g915-tkl-carbon-gallery-topdown.png'
 	}
 ];
 
@@ -306,22 +320,4 @@ export const KEY_TO_IDX: Record<string, number> = {
 	NPDOT: 0x63
 };
 
-export const NUMPAD_CODES = new Set([
-	'NUMLOCK',
-	'NPSLASH',
-	'NPASTERISK',
-	'NPMINUS',
-	'NPPLUS',
-	'NPENTER',
-	'NP0',
-	'NP1',
-	'NP2',
-	'NP3',
-	'NP4',
-	'NP5',
-	'NP6',
-	'NP7',
-	'NP8',
-	'NP9',
-	'NPDOT'
-]);
+export const NUMPAD_CODES = new Set(['NUMLOCK', 'NPSLASH', 'NPASTERISK', 'NPMINUS', 'NPPLUS', 'NPENTER', 'NP0', 'NP1', 'NP2', 'NP3', 'NP4', 'NP5', 'NP6', 'NP7', 'NP8', 'NP9', 'NPDOT']);

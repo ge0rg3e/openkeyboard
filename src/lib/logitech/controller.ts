@@ -15,7 +15,16 @@ export interface LogitechDeviceInfo {
 
 async function sendAll(transport: LogitechTransport, reports: LogiReport[]): Promise<void> {
 	for (const report of reports) {
-		await transport.send(report);
+		try {
+			await transport.send(report);
+		} catch {
+			// The device can briefly reject a write right after a reconnect or while
+			// it's busy; retry once after a short pause before giving up.
+			await new Promise((r) => setTimeout(r, 25));
+			await transport.send(report);
+		}
+		// Some firmware drops reports sent back-to-back; a short gap keeps them apart.
+		await new Promise((r) => setTimeout(r, 5));
 	}
 }
 

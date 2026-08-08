@@ -121,7 +121,13 @@
     $effect(() => saveProfile());
   }
 
+  // Bumped on every effect-tile click so the auto-apply re-sends even when the
+  // user re-picks the tile that's already active (otherwise Svelte sees no
+  // state change and the keyboard keeps whatever the last send left).
+  let applyNonce = $state(0);
+
   const effectParams = $derived.by<EffectParams>(() => {
+    void applyNonce;
     const p: EffectParams = { kind };
     if (kind === "static" || kind === "reactive") p.color = color1;
     if (kind === "breathing") {
@@ -143,9 +149,12 @@
 
   // Auto-apply the effect as soon as any input changes (debounced so scrubbing
   // a slider or dragging a colour picker doesn't flood the keyboard with writes).
+  // Depends on $connected too, so the current effect is pushed to the keyboard
+  // the moment a device is connected — not only on the next param change.
   let applyTimer: ReturnType<typeof setTimeout> | undefined;
   $effect(() => {
     const p = effectParams;
+    if (!$connected) return;
     clearTimeout(applyTimer);
     applyTimer = setTimeout(() => controller.apply(p).catch(() => {}), 120);
   });
@@ -351,7 +360,10 @@
                   variant={kind === value ? "default" : "outline"}
                   size="sm"
                   class="px-1 text-xs"
-                  onclick={() => (kind = value)}
+                  onclick={() => {
+                    kind = value;
+                    applyNonce++;
+                  }}
                 >
                   {label}
                 </Button>
