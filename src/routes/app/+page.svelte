@@ -167,47 +167,53 @@
     showMode || showColor1 || showSpeed || showDirection,
   );
 
+  const vendor = $derived($deviceInfo?.vendor ?? "razer");
+  const kbd = $derived($deviceInfo?.vendor === "razer" ? $deviceInfo.kbd : undefined);
+  const lkb = $derived($deviceInfo?.vendor === "logitech" ? $deviceInfo.lkb : undefined);
+
   // Per-key "custom" lighting needs a standard 6-row matrix + a driver that
-  // exposes matrix_custom_frame (every Chroma keyboard except the keypads).
+  // exposes a custom-frame interface. Chroma boards need matrix_custom_frame;
+  // Logitech boards advertise the capability in their device spec.
   const canCustom = $derived(
     $connected
-      ? !!$deviceInfo?.kbd &&
-          $deviceInfo.kbd.custom &&
-          customSupported(
-            $deviceInfo.kbd.matrixRows,
-            $deviceInfo.kbd.matrixCols,
-          )
+      ? vendor === "razer"
+        ? !!kbd?.custom && customSupported(kbd.matrixRows, kbd.matrixCols)
+        : !!lkb?.custom
       : true,
   );
   // The Huntsman Elite (9-row matrix) exposes media keys + a wrist-rest lightbar.
   const isElite = $derived(
-    !!$deviceInfo?.kbd &&
-      $deviceInfo.kbd.matrixRows === 9 &&
-      $deviceInfo.kbd.matrixCols === 22,
+    !!kbd && kbd.matrixRows === 9 && kbd.matrixCols === 22,
   );
   // The "Wheel" hardware effect only exists on the BlackWidow V4 family;
   // other boards fall back to spectrum, so the tile is only offered when the
   // connected device supports it (or in demo mode where the preview animates).
-  const canWheel = $derived(!$connected || !!$deviceInfo?.kbd?.wheel);
-  const effectList = $derived<Array<[EffectKind, string]>>([
-    ["off", "Off"],
-    ["static", "Static"],
-    ["wave", "Wave"],
-    ...(canWheel ? ([["wheel", "Wheel"]] as Array<[EffectKind, string]>) : []),
-    ["spectrum", "Spectrum"],
-    ["reactive", "Reactive"],
-    ["breathing", "Breath"],
-    ["starlight", "Star"],
-    ...(canCustom ? ([["custom", "Custom"]] as Array<[EffectKind, string]>) : []),
-  ]);
+  const canWheel = $derived(!$connected || !!kbd?.wheel);
+  const logiEffects = $derived(new Set(lkb?.effects ?? []));
+  const effectList = $derived.by<Array<[EffectKind, string]>>(() => {
+    const list: Array<[EffectKind, string]> = [
+      ["off", "Off"],
+      ["static", "Static"],
+    ];
+    if (vendor === "razer") {
+      list.push(["wave", "Wave"]);
+      if (canWheel) list.push(["wheel", "Wheel"]);
+      list.push(["spectrum", "Spectrum"], ["reactive", "Reactive"], ["breathing", "Breath"], ["starlight", "Star"]);
+    } else {
+      if (logiEffects.has("wave")) list.push(["wave", "Wave"]);
+      if (logiEffects.has("spectrum")) list.push(["spectrum", "Spectrum"]);
+      if (logiEffects.has("breathing")) list.push(["breathing", "Breath"]);
+    }
+    if (canCustom) list.push(["custom", "Custom"]);
+    return list;
+  });
 
   // Fall back to a hardware effect if the connected board can't do the
-  // selected effect (custom needs a custom-frame matrix, wheel needs the
-  // BlackWidow V4 family's hardware effect).
+  // selected effect (custom needs a custom-frame matrix, wheel/reactive/
+  // starlight are Chroma-only or device-gated).
   $effect(() => {
     if (!$connected) return;
-    if (kind === "custom" && !canCustom) kind = "static";
-    else if (kind === "wheel" && !canWheel) kind = "spectrum";
+    if (!effectList.some(([k]) => k === kind)) kind = "static";
   });
 
   let gm = $state<boolean>(false);
@@ -259,10 +265,16 @@
     {#if $connected}
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          {#if $deviceInfo?.kbd}
+          {#if $connected && vendor === "razer"}
             <img
               src="/razer.png"
               alt="Razer"
+              class="h-5 w-auto shrink-0 object-contain"
+            />
+          {:else if $connected && vendor === "logitech"}
+            <img
+              src="/logitech.png"
+              alt="Logitech"
               class="h-5 w-auto shrink-0 object-contain"
             />
           {/if}
@@ -310,7 +322,7 @@
         >
           <KeyboardVisual
             preview={kind}
-            layout={$deviceInfo?.kbd?.layout ?? "full"}
+            layout={kbd?.layout ?? lkb?.layout ?? "full"}
             {effectParams}
             {brightness}
             custom={customColors}
@@ -509,12 +521,12 @@
             <Separator />
 
             <div class="flex flex-col gap-3">
-              <span
-                class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-                >Device</span
-              >
+              {#if $connected && vendor === "razer"}
+                <span
+                  class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                  >Device</span
+                >
 
-              {#if $connected}
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex flex-col">
                     <Label class="text-xs">Game mode</Label>

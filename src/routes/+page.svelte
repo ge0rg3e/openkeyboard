@@ -3,17 +3,20 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { KEYBOARD_DEVICES } from '$lib/razer/devices';
+	import { LOGITECH_DEVICES } from '$lib/logitech/devices';
+	import type { Vendor } from '$lib/store';
 	import { Tabs, TabsList, TabsTrigger, TabsContent } from '$lib/components/ui/tabs';
 	import { connect, controller } from '$lib/store';
 	import { goto } from '$app/navigation';
 
 	async function startConnect() {
-		await connect();
+		await connect(activeCat.vendor);
 		if (controller.connected) goto('/app');
 	}
 
 	const linuxSetupCommands = `sudo tee /etc/udev/rules.d/55-openkeyboard.rules <<'EOF'
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", MODE="0666", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", MODE="0666", TAG+="uaccess"
 EOF
 sudo udevadm control --reload-rules
 sudo udevadm trigger`;
@@ -45,19 +48,46 @@ sudo udevadm trigger`;
 		}))
 		.filter((g) => g.items.length > 0);
 
-	// Supported categories. Only Razer is wired up today; future brands can
-	// add their own entry with a resolved groups array.
-	const categories = [
+	const logiFamily = (name: string): string => {
+		if (name.includes('G213')) return 'G213 Prodigy';
+		if (name.includes('G512')) return 'G512';
+		if (name.includes('G610')) return 'G610';
+		if (name.includes('G810')) return 'G810 Orion Spectrum';
+		if (name.includes('G910')) return 'G910 Orion';
+		if (name.includes('G813') || name.includes('G815')) return 'G813 / G815';
+		if (name.includes('G915')) return 'G915 Lightspeed';
+		if (name.includes('G Pro')) return 'G Pro';
+		return 'Other';
+	};
+
+	const logiOrder = ['G213 Prodigy', 'G512', 'G610', 'G810 Orion Spectrum', 'G910 Orion', 'G Pro', 'G813 / G815', 'G915 Lightspeed', 'Other'];
+	const logiGroups = logiOrder
+		.map((label) => ({
+			label,
+			items: LOGITECH_DEVICES.filter((d) => logiFamily(d.name) === label)
+		}))
+		.filter((g) => g.items.length > 0);
+
+	// Supported brands. Each entry resolves its own device groups; the Connect
+	// button connects whatever brand's tab is active.
+	const categories: Array<{ id: string; label: string; vendor: Vendor; groups: Array<{ label: string; items: Array<{ name: string; image?: string }> }> }> = [
 		{
 			id: 'razer',
 			label: 'Razer',
+			vendor: 'razer',
 			groups: razerGroups
+		},
+		{
+			id: 'logitech',
+			label: 'Logitech',
+			vendor: 'logitech',
+			groups: logiGroups
 		}
 	];
 
 	let activeCategory = $state(categories[0].id);
-	const activeGroup = $derived(categories.find((c) => c.id === activeCategory)!.groups);
-	const deviceCount = $derived(activeGroup.reduce((n, g) => n + g.items.length, 0));
+	const activeCat = $derived(categories.find((c) => c.id === activeCategory)!);
+	const deviceCount = $derived(activeCat.groups.reduce((n, g) => n + g.items.length, 0));
 
 	const features = [
 		{
@@ -133,9 +163,9 @@ sudo udevadm trigger`;
 				<div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
 					<div>
 						<h2 class="text-2xl font-bold tracking-tight">Supported keyboards</h2>
-						<p class="mt-2 max-w-xl text-sm text-muted-foreground">
-							{deviceCount} Razer Chroma keyboards supported.
-						</p>
+					<p class="mt-2 max-w-xl text-sm text-muted-foreground">
+						{deviceCount} {activeCat.label} keyboards supported.
+					</p>
 					</div>
 					<Badge variant="secondary" class="rounded-full">
 						{deviceCount} devices

@@ -18,6 +18,7 @@ If "Connect Keyboard" looks like it worked but nothing changes, run these three 
 ```
 sudo tee /etc/udev/rules.d/55-openkeyboard.rules <<'EOF'
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", MODE="0666", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", MODE="0666", TAG+="uaccess"
 EOF
 sudo udevadm control --reload-rules
 sudo udevadm trigger
