@@ -103,7 +103,7 @@ sudo udevadm trigger`;
 </script>
 
 <svelte:head>
-	<title>OpenKeyboard — control your Razer & Logitech RGB keyboard in the browser</title>
+	<title>OpenKeyboard: control your Razer & Logitech RGB keyboard in the browser</title>
 	<meta
 		name="description"
 		content="OpenKeyboard is a free, open-source WebHID app that controls your Razer Chroma and Logitech G-series keyboard lighting straight from the browser. No drivers, no Synapse, nothing to install."
@@ -114,29 +114,17 @@ sudo udevadm trigger`;
 
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="OpenKeyboard" />
-	<meta
-		property="og:title"
-		content="OpenKeyboard — control your Razer & Logitech RGB keyboard in the browser"
-	/>
-	<meta
-		property="og:description"
-		content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install."
-	/>
+	<meta property="og:title" content="OpenKeyboard control your Razer & Logitech RGB keyboard in the browser" />
+	<meta property="og:description" content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install." />
 	<meta property="og:url" content="https://openkeyboard.vercel.app/" />
 	<meta property="og:image" content="https://openkeyboard.vercel.app/og.png" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
-	<meta property="og:image:alt" content="OpenKeyboard — keyboard lighting in your browser" />
+	<meta property="og:image:alt" content="OpenKeyboard - keyboard lighting in your browser" />
 
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta
-		name="twitter:title"
-		content="OpenKeyboard — control your Razer & Logitech RGB keyboard in the browser"
-	/>
-	<meta
-		name="twitter:description"
-		content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install."
-	/>
+	<meta name="twitter:title" content="OpenKeyboard control your Razer & Logitech RGB keyboard in the browser" />
+	<meta name="twitter:description" content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install." />
 	<meta name="twitter:image" content="https://openkeyboard.vercel.app/og.png" />
 
 	<script type="application/ld+json">
@@ -218,9 +206,10 @@ sudo udevadm trigger`;
 				<div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
 					<div>
 						<h2 class="text-2xl font-bold tracking-tight">Supported keyboards</h2>
-					<p class="mt-2 max-w-xl text-sm text-muted-foreground">
-						{deviceCount} {activeCat.label} keyboards supported.
-					</p>
+						<p class="mt-2 max-w-xl text-sm text-muted-foreground">
+							{deviceCount}
+							{activeCat.label} keyboards supported.
+						</p>
 					</div>
 					<Badge variant="secondary" class="rounded-full">
 						{deviceCount} devices

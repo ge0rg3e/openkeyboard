@@ -77,9 +77,11 @@ export class WebHidTransport extends Transport {
 		if (!webhidContextOk()) {
 			throw new Error('WebHID requires a secure context. Open the page over https:// or http://localhost.');
 		}
-		const grantedRaw = granted ?? (await navigator.hid!.requestDevice({
-			filters: [{ vendorId: 0x1532 }]
-		}));
+		const grantedRaw =
+			granted ??
+			(await navigator.hid!.requestDevice({
+				filters: [{ vendorId: 0x1532 }]
+			}));
 		if (!grantedRaw.length) throw new Error('No Razer device selected.');
 
 		// Only use handles that are known Razer *keyboards*. Peripheral headsets etc.
@@ -100,7 +102,7 @@ export class WebHidTransport extends Transport {
 			}
 		}
 		if (!candidates.length) {
-			throw new Error('Could not open a supported Razer keyboard. Grant access to your keyboard (e.g. Huntsman, BlackWidow) — headsets/mice are ignored.');
+			throw new Error('Could not open a supported Razer keyboard. Grant access to your keyboard (e.g. Huntsman, BlackWidow) - headsets/mice are ignored.');
 		}
 		// Pin a single keyboard; never hop between devices during writes.
 		this.devices = candidates;

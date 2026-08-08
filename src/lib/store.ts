@@ -1,4 +1,4 @@
-// Shared application state — a vendor-agnostic controller facade used across views.
+// Shared application state - a vendor-agnostic controller facade used across views.
 import { writable } from 'svelte/store';
 import { KeyboardController, type DeviceInfo, type EffectParams } from './controller';
 import { LogitechKeyboardController, type LogitechDeviceInfo } from './logitech/controller';

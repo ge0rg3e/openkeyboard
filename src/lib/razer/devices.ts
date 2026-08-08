@@ -29,7 +29,7 @@ export interface KeyboardDevice {
 	/** false for boards whose driver has no custom-frame device file. */
 	custom: boolean;
 	/** true when the firmware exposes the hardware colour-wheel effect
-	 *  (extended matrix effect 0x0a — only the BlackWidow V4 family). */
+	 *  (extended matrix effect 0x0a - only the BlackWidow V4 family). */
 	wheel?: boolean;
 }
 
@@ -103,10 +103,10 @@ const MATRIX_OVERRIDES: Record<number, [number, number]> = {
 	// classic 6×17 / 6×19 (recent Blade generations)
 	0x02c6: [6, 17],
 	0x02c7: [6, 19],
-	// extended TKL — DeathStalker V2 Pro TKL drops the cluster, not just the numpad
+	// extended TKL - DeathStalker V2 Pro TKL drops the cluster, not just the numpad
 	0x0296: [6, 17],
 	0x0298: [6, 17],
-	// extended 75% — no nav cluster
+	// extended 75% - no nav cluster
 	0x02a5: [6, 16],
 	// extended full-size with extra rows (wrist-rest lightbar / macro row)
 	0x0226: [9, 22],

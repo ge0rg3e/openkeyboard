@@ -103,7 +103,7 @@ export class KeyboardController {
 			await this.applyCustomFrame(params.custom ?? {});
 			return;
 		}
-		const vs = 1; // VARSTORE — the effect is written to the keyboard's on-device storage,
+		const vs = 1; // VARSTORE - the effect is written to the keyboard's on-device storage,
 		// so it persists after the app closes and across replug/reboot.
 		const led = LED.BACKLIGHT;
 		const report = this.buildEffect(params, vs, led);
@@ -112,7 +112,7 @@ export class KeyboardController {
 	}
 	/** Write a per-key colour frame and switch the keyboard to custom mode.
 	 *  Custom frames are host-rendered (NOSTORE), so they don't survive a
-	 *  power cycle — the browser must re-send them, exactly like OpenRazer. */
+	 *  power cycle - the browser must re-send them, exactly like OpenRazer. */
 	private async applyCustomFrame(colors: Record<string, string>): Promise<void> {
 		if (!this.transport) throw new Error('Not connected.');
 		const kbd = this.device;

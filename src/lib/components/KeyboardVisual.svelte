@@ -226,7 +226,7 @@
 			{ label: 'K', code: 'K' },
 			{ label: 'L', code: 'L' },
 			{ label: '; :', code: 'SEMICOLON' },
-			{ label: "' \"", code: 'APOSTROPHE' },
+			{ label: '\' "', code: 'APOSTROPHE' },
 			{ label: '\u21B7', code: 'ENTER', cls: 'enter' },
 			{ label: 'Del', code: 'DEL', cls: 'cluster' },
 			{ label: 'End', code: 'END', cls: 'cluster' },
@@ -261,7 +261,7 @@
 		]
 	];
 
-	// Function row — shown for full/tkl boards. Esc sits top-left (above Tab),
+	// Function row - shown for full/tkl boards. Esc sits top-left (above Tab),
 	// then F1-F12, and the print screen / scroll lock / pause cluster.
 	const FN_ROW: K[] = [{ label: 'Esc', code: 'ESC' }];
 	const FN_END: K[] = [
@@ -272,7 +272,7 @@
 	for (let i = 1; i <= 12; i++) FN_ROW.push({ label: `F${i}`, code: `F${i}` });
 	for (const k of FN_END) FN_ROW.push(k);
 
-	// Numpad block — shown only for full (104-key) boards.
+	// Numpad block - shown only for full (104-key) boards.
 	const NUMPAD: K[][] = [
 		[
 			{ label: 'Num', code: 'NUMLOCK' },
@@ -280,65 +280,79 @@
 			{ label: '*', code: 'NPASTERISK' },
 			{ label: '-', code: 'NPMINUS' }
 		],
-		[{ label: '7', code: 'NP7' }, { label: '8', code: 'NP8' }, { label: '9', code: 'NP9' }, { label: '+', code: 'NPPLUS', cls: 'nplus' }],
-		[{ label: '4', code: 'NP4' }, { label: '5', code: 'NP5' }, { label: '6', code: 'NP6' }, { label: '', cls: 'blank' }],
-		[{ label: '1', code: 'NP1' }, { label: '2', code: 'NP2' }, { label: '3', code: 'NP3' }, { label: '', cls: 'blank' }],
-		[{ label: '0', code: 'NP0', cls: 'np0' }, { label: '.', code: 'NPDOT' }, { label: '', cls: 'blank' }, { label: '', cls: 'blank' }]
+		[
+			{ label: '7', code: 'NP7' },
+			{ label: '8', code: 'NP8' },
+			{ label: '9', code: 'NP9' },
+			{ label: '+', code: 'NPPLUS', cls: 'nplus' }
+		],
+		[
+			{ label: '4', code: 'NP4' },
+			{ label: '5', code: 'NP5' },
+			{ label: '6', code: 'NP6' },
+			{ label: '', cls: 'blank' }
+		],
+		[
+			{ label: '1', code: 'NP1' },
+			{ label: '2', code: 'NP2' },
+			{ label: '3', code: 'NP3' },
+			{ label: '', cls: 'blank' }
+		],
+		[
+			{ label: '0', code: 'NP0', cls: 'np0' },
+			{ label: '.', code: 'NPDOT' },
+			{ label: '', cls: 'blank' },
+			{ label: '', cls: 'blank' }
+		]
 	];
 </script>
 
 <section>
 	<div class="keyboard">
 		<div class="stage">
-		<div class="board">
-			{#if showFnRow && FN_ROW.length}
-				<div class="row fnrow">
-					{#each FN_ROW as k}
-						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-						<div
-							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
-							style="{glow(k.code ?? '')}"
-							role={k.code && onKeyClick ? 'button' : undefined}
-							tabindex={k.code && onKeyClick ? 0 : undefined}
-							onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
-							onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
-						>
-							<span class="key-label">{k.label}</span>
-						</div>
-					{/each}
-				</div>
-			{/if}
-			{#each ROWS as row}
-				<div class="row">
-					{#each row as k}
-						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-						<div
-							class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
-							style="{glow(k.code ?? '')}"
-							role={k.code && onKeyClick ? 'button' : undefined}
-							tabindex={k.code && onKeyClick ? 0 : undefined}
-							onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
-							onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
-						>
-							<span class="key-label">{k.label}</span>
-						</div>
-					{/each}
-				</div>
-			{/each}
-		</div>
-		{#if showNumpad}
-			<div class="numpad">
-				{#each NUMPAD as npRow}
-					<div class="row">
-						{#each npRow as k}
+			<div class="board">
+				{#if showFnRow && FN_ROW.length}
+					<div class="row fnrow">
+						{#each FN_ROW as k}
 							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 							<div
 								class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
-								style="{glow(k.code ?? '')}"
+								style={glow(k.code ?? '')}
 								role={k.code && onKeyClick ? 'button' : undefined}
 								tabindex={k.code && onKeyClick ? 0 : undefined}
 								onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
-								onkeydown={k.code && onKeyClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onKeyClick(k.code!); } } : undefined}
+								onkeydown={k.code && onKeyClick
+									? (e: KeyboardEvent) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												onKeyClick(k.code!);
+											}
+										}
+									: undefined}
+							>
+								<span class="key-label">{k.label}</span>
+							</div>
+						{/each}
+					</div>
+				{/if}
+				{#each ROWS as row}
+					<div class="row">
+						{#each row as k}
+							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+							<div
+								class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
+								style={glow(k.code ?? '')}
+								role={k.code && onKeyClick ? 'button' : undefined}
+								tabindex={k.code && onKeyClick ? 0 : undefined}
+								onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
+								onkeydown={k.code && onKeyClick
+									? (e: KeyboardEvent) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												onKeyClick(k.code!);
+											}
+										}
+									: undefined}
 							>
 								<span class="key-label">{k.label}</span>
 							</div>
@@ -346,7 +360,34 @@
 					</div>
 				{/each}
 			</div>
-		{/if}
+			{#if showNumpad}
+				<div class="numpad">
+					{#each NUMPAD as npRow}
+						<div class="row">
+							{#each npRow as k}
+								<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+								<div
+									class="key {k.cls ?? ''} {k.pressed ? 'pressed-side' : ''} {k.code && pressed[k.code] ? 'is-pressed' : ''} {k.code && onKeyClick ? 'paintable' : ''}"
+									style={glow(k.code ?? '')}
+									role={k.code && onKeyClick ? 'button' : undefined}
+									tabindex={k.code && onKeyClick ? 0 : undefined}
+									onclick={k.code && onKeyClick ? () => onKeyClick(k.code!) : undefined}
+									onkeydown={k.code && onKeyClick
+										? (e: KeyboardEvent) => {
+												if (e.key === 'Enter' || e.key === ' ') {
+													e.preventDefault();
+													onKeyClick(k.code!);
+												}
+											}
+										: undefined}
+								>
+									<span class="key-label">{k.label}</span>
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 </section>

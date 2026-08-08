@@ -76,7 +76,7 @@ export function effectColorOf(kind: EffectKind, p: EffectParams, st: PreviewStat
 			return p.color ?? '#ffffff';
 
 		case 'wave': {
-			// phase advances in +rel for dir=+1 (right) — i.e. a colour feature
+			// phase advances in +rel for dir=+1 (right) - i.e. a colour feature
 			// at a fixed angle drifts toward higher rel as time passes, which
 			// reads as the sweep moving right. The double modulo keeps the
 			// negative side wrapping into [0,1) instead of going negative.
@@ -87,14 +87,14 @@ export function effectColorOf(kind: EffectKind, p: EffectParams, st: PreviewStat
 
 		case 'spectrum': {
 			// Hardware "Spectrum Cycling" drives every LED through the colour
-			// spectrum in unison (fixed firmware rate, no speed argument) — the
+			// spectrum in unison (fixed firmware rate, no speed argument) - the
 			// moving rainbow is the separate "Wave" effect.
 			const hue = (t / 8) % 1;
 			return hex(hsv2rgb(hue, 1, 1));
 		}
 
 		case 'wheel': {
-			// "Wheel" spins the full colour wheel across the board — visually a
+			// "Wheel" spins the full colour wheel across the board - visually a
 			// hue that sweeps along the keys, like wave but built from HSV.
 			const dir = p.direction === 'left' ? -1 : 1;
 			const pos = (((rel - (t / 2.6) * dir) % 1) + 1) % 1;

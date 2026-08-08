@@ -20,7 +20,7 @@ export interface HwCell {
 }
 
 const CELLS: HwCell[] = [
-	// Row 0 — function row (M6 at col 0, logo at col 20)
+	// Row 0 - function row (M6 at col 0, logo at col 20)
 	{ code: 'ESC', row: 0, col: 1 },
 	{ code: 'F1', row: 0, col: 3 },
 	{ code: 'F2', row: 0, col: 4 },

@@ -190,7 +190,7 @@ export function classicEffectStarlightRandom(speed: number): CommandReport {
 }
 
 export function classicMatrixSetCustomFrame(row: number, startCol: number, stopCol: number, rgbBytes: number[]): CommandReport {
-	// 0x46 data size = 4 header args + 66 RGB bytes (22 columns) — matches the
+	// 0x46 data size = 4 header args + 66 RGB bytes (22 columns) - matches the
 	// kernel driver's razer_chroma_standard_matrix_set_custom_frame packet.
 	const r = newReport(0x03, 0x0b, 0x46);
 	r.args[0] = 0xff; // frame id
