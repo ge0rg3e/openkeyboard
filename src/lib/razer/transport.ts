@@ -70,23 +70,23 @@ export class WebHidTransport extends Transport {
 	private handleValue: TransportHandle | undefined;
 	private connectedFlag = false;
 
-	async open(): Promise<void> {
+	async open(granted?: HidDevice[]): Promise<void> {
 		if (!webhidSupported()) {
 			throw new Error('WebHID is not available. Use Chrome/Edge on a supported desktop OS.');
 		}
 		if (!webhidContextOk()) {
 			throw new Error('WebHID requires a secure context. Open the page over https:// or http://localhost.');
 		}
-		const granted = await navigator.hid!.requestDevice({
+		const grantedRaw = granted ?? (await navigator.hid!.requestDevice({
 			filters: [{ vendorId: 0x1532 }]
-		});
-		if (!granted.length) throw new Error('No Razer device selected.');
+		}));
+		if (!grantedRaw.length) throw new Error('No Razer device selected.');
 
 		// Only use handles that are known Razer *keyboards*. Peripheral headsets etc.
 		// share the same vendor id but don't implement matrix lighting and would
 		// swallow/interleave commands, causing random keys to flip on/off.
 		const candidates: HidDevice[] = [];
-		for (const d of granted) {
+		for (const d of grantedRaw) {
 			if (!getKeyboard(d.productId)) {
 				logger.info(`Skipping non-keyboard Razer device: ${d.productName || '0x' + d.productId.toString(16)}`);
 				continue;

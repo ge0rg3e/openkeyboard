@@ -4,13 +4,12 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { KEYBOARD_DEVICES } from '$lib/razer/devices';
 	import { LOGITECH_DEVICES } from '$lib/logitech/devices';
-	import type { Vendor } from '$lib/store';
 	import { Tabs, TabsList, TabsTrigger, TabsContent } from '$lib/components/ui/tabs';
 	import { connect, controller } from '$lib/store';
 	import { goto } from '$app/navigation';
 
 	async function startConnect() {
-		await connect(activeCat.vendor);
+		await connect();
 		if (controller.connected) goto('/app');
 	}
 
@@ -69,18 +68,16 @@ sudo udevadm trigger`;
 		.filter((g) => g.items.length > 0);
 
 	// Supported brands. Each entry resolves its own device groups; the Connect
-	// button connects whatever brand's tab is active.
-	const categories: Array<{ id: string; label: string; vendor: Vendor; groups: Array<{ label: string; items: Array<{ name: string; image?: string }> }> }> = [
+	// button lists every supported keyboard from all brands in one picker.
+	const categories: Array<{ id: string; label: string; groups: Array<{ label: string; items: Array<{ name: string; image?: string }> }> }> = [
 		{
 			id: 'razer',
 			label: 'Razer',
-			vendor: 'razer',
 			groups: razerGroups
 		},
 		{
 			id: 'logitech',
 			label: 'Logitech',
-			vendor: 'logitech',
 			groups: logiGroups
 		}
 	];

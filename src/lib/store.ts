@@ -2,7 +2,11 @@
 import { writable } from 'svelte/store';
 import { KeyboardController, type DeviceInfo, type EffectParams } from './controller';
 import { LogitechKeyboardController, type LogitechDeviceInfo } from './logitech/controller';
+import { LOGITECH_VID } from './logitech/constants';
+import { LOGITECH_SUPPORTED_PIDS } from './logitech/devices';
+import { getKeyboard } from './razer/devices';
 import { logger } from './razer/logger';
+import { WebHidTransport } from './razer/transport';
 
 export type Vendor = 'razer' | 'logitech';
 
@@ -52,25 +56,31 @@ logger.log = (level, message, hex, direction) => {
 	logVersion.update((v) => v + 1);
 };
 
-const VENDOR_KEY = 'openkeyboard:vendor';
+type RawDevice = NonNullable<Parameters<WebHidTransport['open']>[0]>[number];
 
-export function lastVendor(): Vendor {
-	if (typeof localStorage === 'undefined') return 'razer';
-	return localStorage.getItem(VENDOR_KEY) === 'logitech' ? 'logitech' : 'razer';
+async function requestDevices(): Promise<RawDevice[]> {
+	if (!navigator.hid) throw new Error('WebHID is not available in this browser.');
+	// Ask for both brands at once so the chooser lists every supported keyboard
+	// that is plugged in; the vendor is picked from whatever the user grants.
+	return navigator.hid.requestDevice({
+		filters: [{ vendorId: 0x1532 }, { vendorId: LOGITECH_VID }]
+	});
 }
 
-export async function connect(vendor?: Vendor): Promise<void> {
-	const chosen: Vendor = vendor ?? lastVendor();
+export async function connect(): Promise<void> {
 	error.set(null);
 	try {
 		if (active) await active.disconnect();
 		active = null;
-		if (chosen === 'logitech') {
-			const info = await logitechController.connect();
+		const granted = await requestDevices();
+		const logiDevices = granted.filter((d) => d.vendorId === LOGITECH_VID && LOGITECH_SUPPORTED_PIDS.includes(d.productId));
+		const razerDevices = granted.filter((d) => getKeyboard(d.productId) !== undefined);
+		if (logiDevices.length > 0) {
+			const info = await logitechController.connect(logiDevices);
 			active = logitechController;
 			deviceInfo.set(info);
-		} else {
-			const info = await razerController.connect();
+		} else if (razerDevices.length > 0) {
+			const info = await razerController.connect(razerDevices);
 			active = razerController;
 			deviceInfo.set({ ...info, vendor: 'razer' });
 			// auto-load the on-device state the HID interface exposes: backlight
@@ -86,11 +96,8 @@ export async function connect(vendor?: Vendor): Promise<void> {
 				const bat = await razerController.getBattery().catch(() => null);
 				if (bat) battery.set(bat);
 			}
-		}
-		try {
-			localStorage.setItem(VENDOR_KEY, chosen);
-		} catch {
-			/* storage unavailable */
+		} else {
+			throw new Error('No supported keyboard was selected. Grant access to a Razer Chroma or Logitech G-series RGB keyboard.');
 		}
 		connected.set(controller.connected);
 	} catch (err) {

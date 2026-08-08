@@ -39,10 +39,10 @@ export class KeyboardController {
 		return this.infoValue;
 	}
 
-	async connect(): Promise<DeviceInfo> {
+	async connect(granted?: Parameters<WebHidTransport['open']>[0]): Promise<DeviceInfo> {
 		if (this.transport) await this.disconnect();
 		const t = new WebHidTransport();
-		await t.open();
+		await t.open(granted);
 		this.transport = t;
 		const h = t.handle;
 		if (!h) throw new Error('No device handle.');
