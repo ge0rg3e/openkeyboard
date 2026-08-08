@@ -15,6 +15,7 @@ interface HidCollection {
 	usagePage?: number;
 	usage?: number;
 	type?: string;
+	outputReports?: Array<{ reportId?: number }>;
 	children?: unknown[];
 }
 
@@ -37,7 +38,7 @@ function webhidSupported(): boolean {
 }
 
 export class LogitechTransport {
-	private device: HidDevice | null = null;
+	private devices: HidDevice[] = [];
 	private handleValue: LogitechHandle | null = null;
 
 	get handle(): LogitechHandle | undefined {
@@ -45,7 +46,7 @@ export class LogitechTransport {
 	}
 
 	get connected(): boolean {
-		return !!this.device?.opened;
+		return this.devices.some((d) => d.opened);
 	}
 
 	async open(granted?: HidDevice[]): Promise<LogitechHandle> {
@@ -58,9 +59,16 @@ export class LogitechTransport {
 		if (candidates.length === 0) {
 			throw new Error('No supported Logitech keyboard was granted. Choose a Logitech RGB keyboard from the picker.');
 		}
+		// Open every granted interface. A board like the G512/G610/G810 exposes
+		// the 20-byte and 64-byte control reports as separate top-level
+		// collections, and each report must be written to the interface that
+		// owns it, so we keep them all and route per report id.
+		for (const device of candidates) {
+			await device.open();
+			this.devices.push(device);
+			this.attachInputListener(device);
+		}
 		const device = candidates[0];
-		await device.open();
-		this.device = device;
 		const spec = getLogitechKeyboard(device.productId);
 		this.handleValue = {
 			name: spec?.name ?? device.productName,
@@ -69,14 +77,20 @@ export class LogitechTransport {
 			serial: undefined,
 			layout: spec
 		};
-		this.attachInputListener();
 		logger.info(`Logitech transport opened: ${this.handleValue.name} (0x${device.productId.toString(16).padStart(4, '0')})`);
 		return this.handleValue;
 	}
 
+	/** The opened interface that declares this output report id (falls back to the first one). */
+	private pick(reportId: number): HidDevice {
+		const byId = this.devices.find((d) => d.collections?.some((c) => c.outputReports?.some((r) => r.reportId === reportId)));
+		return byId ?? this.devices[0];
+	}
+
 	async send(report: LogiReport): Promise<void> {
-		if (!this.device) throw new Error('Logitech transport is not open.');
-		await this.device.sendReport(report.reportId, report.data);
+		if (this.devices.length === 0) throw new Error('Logitech transport is not open.');
+		const device = this.pick(report.reportId);
+		await device.sendReport(report.reportId, report.data);
 		const full = new Uint8Array(report.data.length + 1);
 		full[0] = report.reportId;
 		full.set(report.data, 1);
@@ -87,8 +101,7 @@ export class LogitechTransport {
 		return this.send(report);
 	}
 
-	private attachInputListener(): void {
-		if (!this.device) return;
+	private attachInputListener(device: HidDevice): void {
 		const handler = (event: Event) => {
 			const e = event as Event & { reportId?: number; data?: DataView };
 			if (e.data) {
@@ -96,14 +109,14 @@ export class LogitechTransport {
 				logger.rx(`logi input 0x${(e.reportId ?? 0).toString(16)}`, bytes);
 			}
 		};
-		this.device.addEventListener?.('inputreport', handler);
+		device.addEventListener?.('inputreport', handler);
 	}
 
 	async close(): Promise<void> {
-		if (this.device) {
-			await this.device.close();
-			this.device = null;
-			this.handleValue = null;
+		for (const device of this.devices) {
+			if (device.opened) await device.close();
 		}
+		this.devices = [];
+		this.handleValue = null;
 	}
 }

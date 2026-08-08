@@ -132,8 +132,8 @@ export function romergDirectFrame(fb: FamilyFrameBytes, zone: number, leds: LedF
 	bytes[1] = 0xff;
 	bytes[2] = fb.frameFeature;
 	bytes[3] = fb.frameCmd;
-	bytes[4] = zone;
-	bytes[6] = leds.length;
+	bytes[5] = zone;
+	bytes[7] = leds.length;
 	let offset = 8;
 	for (const led of leds) {
 		bytes[offset++] = led.idx;
