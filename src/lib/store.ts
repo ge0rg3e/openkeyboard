@@ -4,13 +4,16 @@ import { KeyboardController, type DeviceInfo, type EffectParams } from './contro
 import { LogitechKeyboardController, type LogitechDeviceInfo } from './logitech/controller';
 import { LOGITECH_VID } from './logitech/constants';
 import { LOGITECH_SUPPORTED_PIDS } from './logitech/devices';
+import { RedragonKeyboardController, type RedragonDeviceInfo } from './redragon/controller';
+import { REDRAGON_VID } from './redragon/constants';
+import { REDRAGON_SUPPORTED_PIDS } from './redragon/devices';
 import { getKeyboard } from './razer/devices';
 import { logger } from './razer/logger';
 import { WebHidTransport } from './razer/transport';
 
-export type Vendor = 'razer' | 'logitech';
+export type Vendor = 'razer' | 'logitech' | 'redragon';
 
-export type ConnectedDevice = (DeviceInfo & { vendor: 'razer' }) | LogitechDeviceInfo;
+export type ConnectedDevice = (DeviceInfo & { vendor: 'razer' }) | LogitechDeviceInfo | RedragonDeviceInfo;
 
 /** The subset of a vendor controller the UI talks to. */
 export interface AppController {
@@ -23,8 +26,9 @@ export interface AppController {
 
 export const razerController = new KeyboardController();
 export const logitechController = new LogitechKeyboardController();
+export const redragonController = new RedragonKeyboardController();
 
-let active: KeyboardController | LogitechKeyboardController | null = null;
+let active: KeyboardController | LogitechKeyboardController | RedragonKeyboardController | null = null;
 
 export const controller: AppController = {
 	get connected(): boolean {
@@ -60,10 +64,10 @@ type RawDevice = NonNullable<Parameters<WebHidTransport['open']>[0]>[number];
 
 async function requestDevices(): Promise<RawDevice[]> {
 	if (!navigator.hid) throw new Error('WebHID is not available in this browser.');
-	// Ask for both brands at once so the chooser lists every supported keyboard
+	// Ask for every brand at once so the chooser lists each supported keyboard
 	// that is plugged in; the vendor is picked from whatever the user grants.
 	return navigator.hid.requestDevice({
-		filters: [{ vendorId: 0x1532 }, { vendorId: LOGITECH_VID }]
+		filters: [{ vendorId: 0x1532 }, { vendorId: LOGITECH_VID }, { vendorId: REDRAGON_VID }]
 	});
 }
 
@@ -74,10 +78,15 @@ export async function connect(): Promise<void> {
 		active = null;
 		const granted = await requestDevices();
 		const logiDevices = granted.filter((d) => d.vendorId === LOGITECH_VID && LOGITECH_SUPPORTED_PIDS.includes(d.productId));
+		const redragonDevices = granted.filter((d) => d.vendorId === REDRAGON_VID && REDRAGON_SUPPORTED_PIDS.includes(d.productId));
 		const razerDevices = granted.filter((d) => getKeyboard(d.productId) !== undefined);
 		if (logiDevices.length > 0) {
 			const info = await logitechController.connect(logiDevices);
 			active = logitechController;
+			deviceInfo.set(info);
+		} else if (redragonDevices.length > 0) {
+			const info = await redragonController.connect(redragonDevices);
+			active = redragonController;
 			deviceInfo.set(info);
 		} else if (razerDevices.length > 0) {
 			const info = await razerController.connect(razerDevices);
@@ -97,7 +106,7 @@ export async function connect(): Promise<void> {
 				if (bat) battery.set(bat);
 			}
 		} else {
-			throw new Error('No supported keyboard was selected. Grant access to a Razer Chroma or Logitech G-series RGB keyboard.');
+			throw new Error('No supported keyboard was selected. Grant access to a Razer Chroma, Logitech G-series or Redragon RGB keyboard.');
 		}
 		connected.set(controller.connected);
 	} catch (err) {

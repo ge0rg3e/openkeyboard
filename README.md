@@ -19,6 +19,7 @@ If "Connect Keyboard" looks like it worked but nothing changes, run these three 
 sudo tee /etc/udev/rules.d/55-openkeyboard.rules <<'EOF'
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", MODE="0666", TAG+="uaccess"
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", MODE="0666", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", MODE="0666", TAG+="uaccess"
 EOF
 sudo udevadm control --reload-rules
 sudo udevadm trigger
@@ -32,7 +33,9 @@ Keyboards expose vendor HID interfaces that accept effect commands. This app bui
 
 ## Credits
 
-The HID protocol details were reverse-engineered by the [OpenRazer](https://github.com/openrazer/openrazer) project. This app uses their per-device transaction IDs, report indexes, and effect command layouts.
+The HID protocol details for Razer devices were reverse-engineered by the [OpenRazer](https://github.com/openrazer/openrazer) project.
+
+The HID protocol details for Logitech and Redragon devices were reverse-engineered by the [OpenRGB](https://gitlab.com/CalcProgrammer1/OpenRGB) project.
 
 ## Contributing
 

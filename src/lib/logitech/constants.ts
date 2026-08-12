@@ -27,7 +27,8 @@ export const LOGI_MODE = {
 	STATIC: 0x01,
 	BREATHING: 0x02,
 	CYCLE: 0x03,
-	WAVE: 0x04
+	WAVE: 0x04,
+	RIPPLE: 0x05
 } as const;
 
 export const G213_ZONE = {

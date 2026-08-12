@@ -4,6 +4,7 @@ import {
 	G815_FRAME_TYPE,
 	G915_FRAME_TYPE,
 	G915_LOGO_MODE,
+	G915_MODE,
 	G915_ZONE_MODE,
 	LOGI_MODE,
 	ROMERG_ZONE_DIRECT,
@@ -59,6 +60,10 @@ export function mapKind(family: LogitechFamily, kind: string): number {
 		case 'wave':
 			return family === 'g213' || family === 'g915' ? LOGI_MODE.WAVE : LOGI_MODE.CYCLE;
 		case 'reactive':
+			// Ripple (reactive) is a hardware effect on the LIGHTSYNC G915;
+			// every other Logitech family has no ripple engine and gets the
+			// closest equivalent (colour cycle) instead.
+			return family === 'g915' ? LOGI_MODE.RIPPLE : LOGI_MODE.CYCLE;
 		case 'wheel':
 		case 'starlight':
 			return LOGI_MODE.CYCLE;
@@ -99,10 +104,7 @@ export function buildEffectPackets(device: LogitechDevice, sequence: EffectParam
 			const fb = frameBytesFor(device.family);
 			return {
 				init: [],
-				packets: [
-					romergMode(fb, ROMERG_ZONE_MODE.KEYBOARD, mode, speed, rgb),
-					romergMode(fb, ROMERG_ZONE_MODE.LOGO, mode, speed, rgb)
-				],
+				packets: [romergMode(fb, ROMERG_ZONE_MODE.KEYBOARD, mode, speed, rgb), romergMode(fb, ROMERG_ZONE_MODE.LOGO, mode, speed, rgb)],
 				commit: [romergCommit(fb)]
 			};
 		}
@@ -118,13 +120,23 @@ function g213Effect(mode: number, speed: number, direction: 'left' | 'right', rg
 }
 
 function g915Effect(mode: number, speed: number, rgb: [number, number, number]): EffectPackets {
+	// The logo zone uses its own (smaller) effect enum. Off/Static map straight
+	// through, wave and cycle share the "cycle" logo mode, breathing has a
+	// dedicated logo mode, and ripple lights the logo statically (the ripple
+	// engine only covers the keyboard zone) - mirroring G HUB / OpenRGB.
 	const logoMode =
-		mode === LOGI_MODE.BREATHING ? G915_LOGO_MODE.BREATHING : mode === LOGI_MODE.CYCLE ? G915_LOGO_MODE.CYCLE : G915_LOGO_MODE.STATIC;
+		mode === G915_MODE.OFF || mode === G915_MODE.STATIC
+			? mode
+			: mode === G915_MODE.BREATHING
+				? G915_LOGO_MODE.BREATHING
+				: mode === G915_MODE.CYCLE || mode === G915_MODE.WAVE
+					? G915_LOGO_MODE.CYCLE
+					: G915_LOGO_MODE.STATIC;
 	const packets: LogiReport[] = [];
-	if (mode !== LOGI_MODE.OFF) {
+	if (mode !== G915_MODE.OFF) {
 		packets.push(g915Mode(G915_ZONE_MODE.KEYBOARD, mode, logoMode, speed, 0x00, rgb));
 	}
-	packets.push(g915Mode(G915_ZONE_MODE.LOGO, mode, logoMode, speed, 0x00, rgb));
+	packets.push(g915Mode(G915_ZONE_MODE.LOGO, logoMode, logoMode, speed, 0x00, rgb));
 	return { init: g915BeginModeSet(), packets, commit: [] };
 }
 

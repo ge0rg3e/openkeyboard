@@ -4,6 +4,7 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { KEYBOARD_DEVICES } from '$lib/razer/devices';
 	import { LOGITECH_DEVICES } from '$lib/logitech/devices';
+	import { REDRAGON_DEVICES } from '$lib/redragon/devices';
 	import { Tabs, TabsList, TabsTrigger, TabsContent } from '$lib/components/ui/tabs';
 	import { connect, controller } from '$lib/store';
 	import { goto } from '$app/navigation';
@@ -16,6 +17,7 @@
 	const linuxSetupCommands = `sudo tee /etc/udev/rules.d/55-openkeyboard.rules <<'EOF'
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", MODE="0666", TAG+="uaccess"
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", MODE="0666", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", MODE="0666", TAG+="uaccess"
 EOF
 sudo udevadm control --reload-rules
 sudo udevadm trigger`;
@@ -67,6 +69,25 @@ sudo udevadm trigger`;
 		}))
 		.filter((g) => g.items.length > 0);
 
+	const redragonFamily = (name: string): string => {
+		if (name.includes('Magic Wand') || name.includes('K587')) return 'K587 Magic Wand';
+		if (name.includes('K552')) return 'K552 Kumara';
+		if (name.includes('K550')) return 'K550 Yama';
+		if (name.includes('K512')) return 'K512';
+		if (name.includes('Surara') || name.includes('K582')) return 'Surara K582';
+		if (name.includes('K589')) return 'K589 Shrapnel';
+		if (name.includes('Mitra')) return 'K551 Mitra';
+		return 'Other';
+	};
+
+	const redragonOrder = ['K587 Magic Wand', 'K556 Devarajas', 'K552 Kumara', 'K550 Yama', 'K589 Shrapnel', 'Surara K582', 'K512', 'Other'];
+	const redragonGroups = redragonOrder
+		.map((label) => ({
+			label,
+			items: REDRAGON_DEVICES.filter((d) => redragonFamily(d.name) === label)
+		}))
+		.filter((g) => g.items.length > 0);
+
 	// Supported brands. Each entry resolves its own device groups; the Connect
 	// button lists every supported keyboard from all brands in one picker.
 	const categories: Array<{ id: string; label: string; groups: Array<{ label: string; items: Array<{ name: string; image?: string }> }> }> = [
@@ -79,6 +100,11 @@ sudo udevadm trigger`;
 			id: 'logitech',
 			label: 'Logitech',
 			groups: logiGroups
+		},
+		{
+			id: 'redragon',
+			label: 'Redragon',
+			groups: redragonGroups
 		}
 	];
 
@@ -103,10 +129,10 @@ sudo udevadm trigger`;
 </script>
 
 <svelte:head>
-	<title>OpenKeyboard: control your Razer & Logitech RGB keyboard in the browser</title>
+	<title>OpenKeyboard: control your Razer, Logitech & Redragon RGB keyboard in the browser</title>
 	<meta
 		name="description"
-		content="OpenKeyboard is a free, open-source WebHID app that controls your Razer Chroma and Logitech G-series keyboard lighting straight from the browser. No drivers, no Synapse, nothing to install."
+		content="OpenKeyboard is a free, open-source WebHID app that controls your Razer Chroma, Logitech G-series and Redragon keyboard lighting straight from the browser. No drivers, no Synapse, nothing to install."
 	/>
 	<meta name="robots" content="index, follow" />
 	<meta name="theme-color" content="#0a0c0e" />
@@ -114,8 +140,8 @@ sudo udevadm trigger`;
 
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="OpenKeyboard" />
-	<meta property="og:title" content="OpenKeyboard control your Razer & Logitech RGB keyboard in the browser" />
-	<meta property="og:description" content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install." />
+	<meta property="og:title" content="OpenKeyboard control your Razer, Logitech & Redragon RGB keyboard in the browser" />
+	<meta property="og:description" content="Free, open-source WebHID app for Razer Chroma, Logitech G-series and Redragon RGB keyboards. No drivers, no Synapse, nothing to install." />
 	<meta property="og:url" content="https://openkeyboard.vercel.app/" />
 	<meta property="og:image" content="https://openkeyboard.vercel.app/og.png" />
 	<meta property="og:image:width" content="1200" />
@@ -123,8 +149,8 @@ sudo udevadm trigger`;
 	<meta property="og:image:alt" content="OpenKeyboard - keyboard lighting in your browser" />
 
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="OpenKeyboard control your Razer & Logitech RGB keyboard in the browser" />
-	<meta name="twitter:description" content="Free, open-source WebHID app for Razer Chroma and Logitech G-series RGB keyboards. No drivers, no Synapse, nothing to install." />
+	<meta name="twitter:title" content="OpenKeyboard control your Razer, Logitech & Redragon RGB keyboard in the browser" />
+	<meta name="twitter:description" content="Free, open-source WebHID app for Razer Chroma, Logitech G-series and Redragon RGB keyboards. No drivers, no Synapse, nothing to install." />
 	<meta name="twitter:image" content="https://openkeyboard.vercel.app/og.png" />
 
 	<script type="application/ld+json">
@@ -137,13 +163,13 @@ sudo udevadm trigger`;
 			"applicationCategory": "UtilityApplication",
 			"operatingSystem": "Any (Chromium browsers)",
 			"browserRequirements": "WebHID API in a secure context",
-			"description": "Free, open-source browser app that controls Razer Chroma and Logitech G-series keyboard lighting over WebHID. No drivers and no proprietary software required.",
+			"description": "Free, open-source browser app that controls Razer Chroma, Logitech G-series and Redragon keyboard lighting over WebHID. No drivers and no proprietary software required.",
 			"isAccessibleForFree": true,
 			"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
 			"featureList": [
 				"Static, wave, spectrum, reactive, breathing and starlight hardware effects",
 				"Per-key custom lighting",
-				"Works with Razer Chroma and Logitech G-series keyboards",
+				"Works with Razer Chroma, Logitech G-series and Redragon keyboards",
 				"No install, no drivers, no vendor software"
 			],
 			"author": { "@type": "Person", "name": "Ge0rg3e", "url": "https://github.com/ge0rg3e" },

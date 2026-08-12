@@ -141,11 +141,14 @@
 	const vendor = $derived($deviceInfo?.vendor ?? 'razer');
 	const kbd = $derived($deviceInfo?.vendor === 'razer' ? $deviceInfo.kbd : undefined);
 	const lkb = $derived($deviceInfo?.vendor === 'logitech' ? $deviceInfo.lkb : undefined);
+	const rkb = $derived($deviceInfo?.vendor === 'redragon' ? $deviceInfo.rdk : undefined);
 
 	// Per-key "custom" lighting needs a standard 6-row matrix + a driver that
 	// exposes a custom-frame interface. Chroma boards need matrix_custom_frame;
-	// Logitech boards advertise the capability in their device spec.
-	const canCustom = $derived($connected ? (vendor === 'razer' ? !!kbd?.custom && customSupported(kbd.matrixRows, kbd.matrixCols) : !!lkb?.custom) : true);
+	// Logitech boards advertise the capability in their device spec. Redragon
+	// EVision firmware has no reliable per-key control, so it gets solid colour
+	// "custom" instead.
+	const canCustom = $derived($connected ? (vendor === 'razer' ? !!kbd?.custom && customSupported(kbd.matrixRows, kbd.matrixCols) : vendor === 'logitech' ? !!lkb?.custom : false) : true);
 	// The Huntsman Elite (9-row matrix) exposes media keys + a wrist-rest lightbar.
 	const isElite = $derived(!!kbd && kbd.matrixRows === 9 && kbd.matrixCols === 22);
 	// The "Wheel" hardware effect only exists on the BlackWidow V4 family;
@@ -153,6 +156,7 @@
 	// connected device supports it (or in demo mode where the preview animates).
 	const canWheel = $derived(!$connected || !!kbd?.wheel);
 	const logiEffects = $derived(new Set(lkb?.effects ?? []));
+	const redragonEffects = $derived(new Set(rkb?.effects ?? []));
 	const effectList = $derived.by<Array<[EffectKind, string]>>(() => {
 		const list: Array<[EffectKind, string]> = [
 			['off', 'Off'],
@@ -162,10 +166,17 @@
 			list.push(['wave', 'Wave']);
 			if (canWheel) list.push(['wheel', 'Wheel']);
 			list.push(['spectrum', 'Spectrum'], ['reactive', 'Reactive'], ['breathing', 'Breath'], ['starlight', 'Star']);
+		} else if (vendor === 'redragon') {
+			if (redragonEffects.has('wave')) list.push(['wave', 'Wave']);
+			if (redragonEffects.has('spectrum')) list.push(['spectrum', 'Spectrum']);
+			if (redragonEffects.has('reactive')) list.push(['reactive', 'Reactive']);
+			if (redragonEffects.has('breathing')) list.push(['breathing', 'Breath']);
+			if (redragonEffects.has('starlight')) list.push(['starlight', 'Star']);
 		} else {
 			if (logiEffects.has('wave')) list.push(['wave', 'Wave']);
 			if (logiEffects.has('spectrum')) list.push(['spectrum', 'Spectrum']);
 			if (logiEffects.has('breathing')) list.push(['breathing', 'Breath']);
+			if (logiEffects.has('reactive')) list.push(['reactive', 'Ripple']);
 		}
 		if (canCustom) list.push(['custom', 'Custom']);
 		return list;
@@ -197,7 +208,7 @@
 	<title>OpenKeyboard</title>
 	<meta
 		name="description"
-		content="Control your Razer Chroma or Logitech G-series keyboard from the browser with OpenKeyboard. Apply effects, set brightness, and manage per-key lighting over WebHID."
+		content="Control your Razer Chroma, Logitech G-series or Redragon RGB keyboard from the browser with OpenKeyboard. Apply effects, set brightness, and manage per-key lighting over WebHID."
 	/>
 	<meta name="robots" content="noindex, nofollow" />
 	<meta name="theme-color" content="#0a0c0e" />
@@ -232,6 +243,8 @@
 						<img src="/razer.png" alt="Razer" class="h-5 w-auto shrink-0 object-contain" />
 					{:else if $connected && vendor === 'logitech'}
 						<img src="/logitech.png" alt="Logitech" class="h-5 w-auto shrink-0 object-contain" />
+					{:else if $connected && vendor === 'redragon'}
+						<img src="/redragon.png" alt="Redragon" class="h-5 w-auto shrink-0 object-contain" />
 					{/if}
 					{$deviceInfo?.name ?? 'Keyboard'}
 
@@ -265,7 +278,7 @@
 				<div class="relative h-[340px] overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-950 via-[#0a0c0e] to-black p-4 shadow-2xl shadow-black/50 sm:p-6">
 					<KeyboardVisual
 						preview={kind}
-						layout={kbd?.layout ?? lkb?.layout ?? 'full'}
+						layout={kbd?.layout ?? lkb?.layout ?? rkb?.layout ?? 'full'}
 						{effectParams}
 						{brightness}
 						custom={customColors}

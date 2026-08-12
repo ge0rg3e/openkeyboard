@@ -1,7 +1,7 @@
 import type { LayoutKind } from '../razer/devices';
 import { LOGITECH_PIDS, type LogitechFamily } from './constants';
 
-export type LogitechEffect = 'off' | 'static' | 'spectrum' | 'wave' | 'breathing';
+export type LogitechEffect = 'off' | 'static' | 'spectrum' | 'wave' | 'breathing' | 'reactive';
 
 export interface LogitechDevice {
 	pid: number;
@@ -187,7 +187,7 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		reportIds: [0x11],
 		custom: true,
 		wave: true,
-		effects: ['off', 'static', 'spectrum', 'wave', 'breathing'],
+		effects: ['off', 'static', 'spectrum', 'wave', 'breathing', 'reactive'],
 		matrixRows: 6,
 		matrixCols: 22,
 		image: 'https://www.logitechg.com/content/dam/gaming/en/products/g915/g915-gallery-2.png'
@@ -200,7 +200,7 @@ export const LOGITECH_DEVICES: LogitechDevice[] = [
 		reportIds: [0x11],
 		custom: true,
 		wave: true,
-		effects: ['off', 'static', 'spectrum', 'wave', 'breathing'],
+		effects: ['off', 'static', 'spectrum', 'wave', 'breathing', 'reactive'],
 		matrixRows: 6,
 		matrixCols: 17,
 		image: 'https://www.logitechg.com/content/dam/gaming/en/products/g915-tkl/g915-tkl-gallery/deu-g915-tkl-carbon-gallery-topdown.png'
